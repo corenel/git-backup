@@ -37,7 +37,7 @@ github:
     org_member: true
     # (optional) Set this url to connect to
     # your self-hosted github install.
-    # (default: https://api.github.com)
+    # (default: https://api.github.com/api/v3)
     url: https://github.mydomain.com
     # (optional) Exclude this list of repos
     # or whole organizations/users

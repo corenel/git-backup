@@ -97,7 +97,7 @@ func (c *GithubConfig) setDefaults() {
 		c.client = github.NewClient(httpClient)
 	} else {
 		var err error
-		c.client, err = github.NewEnterpriseClient(fmt.Sprintf("%s/api/v3/", c.URL), fmt.Sprintf("%s/api/uploads/", c.URL), httpClient)
+		c.client, err = github.NewEnterpriseClient(fmt.Sprintf("%s/", c.URL), fmt.Sprintf("%s/api/uploads/", c.URL), httpClient)
 		if err != nil {
 			panic(err)
 		}
