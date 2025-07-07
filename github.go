@@ -93,14 +93,34 @@ func (c *GithubConfig) setDefaults() {
 		c.Starred = boolPointer(true)
 	}
 	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(&oauth2.Token{AccessToken: c.AccessToken}))
+
+	// Start with the default constructor to avoid Enterprise quirks,
+	// then patch BaseURL/UploadURL as needed.
+	c.client = github.NewClient(httpClient)
+
+	// If no custom URL is supplied we’re done (public github.com).
 	if c.URL == "" {
-		c.client = github.NewClient(httpClient)
-	} else {
-		var err error
-		c.client, err = github.NewEnterpriseClient(fmt.Sprintf("%s/", c.URL), fmt.Sprintf("%s/api/uploads/", c.URL), httpClient)
-		if err != nil {
-			panic(err)
-		}
+		return
+	}
+
+	// Normalise the given URL: make sure it ends with a single “/”.
+	base := strings.TrimRight(c.URL, "/") + "/"
+
+	// Decide where uploads should go:
+	//   * Gitee (or any API already containing “/api/”) → same endpoint
+	//   * GitHub Enterprise (site root)                 → /api/uploads/
+	upload := base
+	if !strings.Contains(base, "/api/") {
+		upload = strings.TrimRight(c.URL, "/") + "/api/uploads/"
+	}
+
+	// Overwrite the internal endpoints.
+	var err error
+	if c.client.BaseURL, err = url.Parse(base); err != nil {
+		panic(fmt.Errorf("invalid API base URL %q: %w", base, err))
+	}
+	if c.client.UploadURL, err = url.Parse(upload); err != nil {
+		panic(fmt.Errorf("invalid upload URL %q: %w", upload, err))
 	}
 }
 
